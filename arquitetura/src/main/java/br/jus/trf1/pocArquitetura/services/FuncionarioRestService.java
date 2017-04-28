@@ -61,7 +61,7 @@ public class FuncionarioRestService {
 	@Asynchronous
 	public void getFuncionarioAsyncro(@PathParam("matricula") String matricula,
 			@Suspended final AsyncResponse asyncResponse) {
-		acumulador.soma();
+		
 		String initialThread = Thread.currentThread().getName();
 		System.out.println(
 				"Quantidade: " + acumulador.getQuantidade() + " Thread Requisicao: " + initialThread + " in action...");
@@ -70,7 +70,7 @@ public class FuncionarioRestService {
 			asyncResponse.cancel();
 			System.out.println("Requisicao Cancelada.");
 		} else {
-
+			acumulador.soma();
 			Future<?> atividade = managedExecutorService.submit(new Runnable() {
 				@Override
 				public void run() {
@@ -83,7 +83,7 @@ public class FuncionarioRestService {
 
 				private String heavyLifting() {
 					try {
-						Thread.sleep(new Random().nextInt(15000)+2000);
+						Thread.sleep(new Random().nextInt(2000));
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
