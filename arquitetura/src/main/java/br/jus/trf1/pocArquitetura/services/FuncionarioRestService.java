@@ -18,8 +18,10 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.CompletionCallback;
 import javax.ws.rs.container.ConnectionCallback;
 import javax.ws.rs.container.Suspended;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 
 import br.jus.trf1.pocArquitetura.dao.FuncionarioDAO;
 import br.jus.trf1.pocArquitetura.entidades.Acumulador;
@@ -54,12 +56,25 @@ public class FuncionarioRestService {
 
 		return funcionarioDAO.find(Funcionario.class, matricula);
 	}
+	
+	@GET
+	@Path("cache/funcionario/{matricula}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getFuncionarioCache(@PathParam("matricula") String matricula) {
+		CacheControl cc = new CacheControl();
+		cc.setMaxAge(300);
+		cc.setPrivate(true);
+		cc.setNoCache(false);
+		ResponseBuilder builder = Response.ok(funcionarioDAO.find(Funcionario.class, matricula), "application/json");
+		builder.cacheControl(cc);
+		return builder.build();
+	}
 
 	@GET
 	@Path("async/funcionario/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Asynchronous
-	public void getFuncionarioAsyncro(@PathParam("matricula") String matricula,
+	public void getFuncionarioAsyncro(@PathParam("matricula") final String matricula,
 			@Suspended final AsyncResponse asyncResponse) {
 		
 		String initialThread = Thread.currentThread().getName();
@@ -71,7 +86,7 @@ public class FuncionarioRestService {
 			System.out.println("Requisicao Cancelada.");
 		} else {
 			acumulador.soma();
-			Future<?> atividade = managedExecutorService.submit(new Runnable() {
+			final Future<?> atividade = managedExecutorService.submit(new Runnable() {
 				@Override
 				public void run() {
 					String initialThread = Thread.currentThread().getName();
