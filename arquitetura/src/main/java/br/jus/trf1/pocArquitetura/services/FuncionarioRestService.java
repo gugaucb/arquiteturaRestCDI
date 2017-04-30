@@ -1,8 +1,11 @@
 package br.jus.trf1.pocArquitetura.services;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.Random;
+import java.util.TimeZone;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -76,9 +79,11 @@ public class FuncionarioRestService {
 	@Path("cache/funcionario/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getFuncionarioCache(@PathParam("matricula") String matricula, @Context Request request) {
-		LocalDateTime hoje = LocalDateTime.now();
-		LocalDateTime hojeMais2Minutos = hoje.plus(2, ChronoUnit.MINUTES);
-		
+		 ZoneId zone = ZoneId.of("Brazil/East");
+		LocalDateTime hoje = LocalDateTime.now(zone);
+		LocalDateTime hojeMais2Minutos = hoje.plus(1, ChronoUnit.MINUTES);
+		System.out.println(hoje);
+		System.out.println(hojeMais2Minutos);
 		Funcionario funcionario = funcionarioDAO.find(Funcionario.class, matricula);
 		if(funcionario==null){
 			funcionario = new Funcionario();
@@ -87,12 +92,16 @@ public class FuncionarioRestService {
 		
 		
 		CacheControl cc = new CacheControl();
-		cc.setMaxAge(1000);
+		cc.setMaxAge(60);
 		cc.setPrivate(true);
 		cc.setNoCache(false);
+		cc.setSMaxAge(60);
 		
 		ResponseBuilder builder = request.evaluatePreconditions(tag);
 		if(builder!= null){
+			Date asDate = Util.asDate(hojeMais2Minutos);
+			System.out.println(asDate);
+			builder.expires(asDate);
 			builder.cacheControl(cc);
 			return builder.build();
 		}
@@ -100,7 +109,9 @@ public class FuncionarioRestService {
 		
 		 builder = Response.ok(funcionario, "application/json");
 		
-		builder.expires(Util.asDate(hojeMais2Minutos));
+		Date asDate = Util.asDate(hojeMais2Minutos);
+		System.out.println(asDate);
+		builder.expires(asDate);
 		builder.cacheControl(cc);
 		builder.tag(tag);
 		return builder.build();
