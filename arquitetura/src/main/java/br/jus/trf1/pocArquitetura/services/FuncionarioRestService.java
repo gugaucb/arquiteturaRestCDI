@@ -1,7 +1,6 @@
 package br.jus.trf1.pocArquitetura.services;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Random;
 import java.util.concurrent.Future;
@@ -14,6 +13,7 @@ import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -22,7 +22,10 @@ import javax.ws.rs.container.CompletionCallback;
 import javax.ws.rs.container.ConnectionCallback;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
@@ -52,6 +55,14 @@ public class FuncionarioRestService {
 		Funcionario func = funcionarioDAO.save(funcionario);
 		return Response.status(200).entity(func).build();
 	}
+	
+	@PUT
+	@Path("funcionarios")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response atualizar(Funcionario funcionario) {
+		Funcionario func = funcionarioDAO.merge(funcionario);
+		return Response.status(200).entity(func).build();
+	}
 
 	@GET
 	@Path("funcionario/{matricula}")
@@ -64,17 +75,34 @@ public class FuncionarioRestService {
 	@GET
 	@Path("cache/funcionario/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getFuncionarioCache(@PathParam("matricula") String matricula) {
+	public Response getFuncionarioCache(@PathParam("matricula") String matricula, @Context Request request) {
 		LocalDateTime hoje = LocalDateTime.now();
 		LocalDateTime hojeMais2Minutos = hoje.plus(2, ChronoUnit.MINUTES);
 		
+		Funcionario funcionario = funcionarioDAO.find(Funcionario.class, matricula);
+		if(funcionario==null){
+			funcionario = new Funcionario();
+		}
+		EntityTag tag = new EntityTag(Integer.toString(funcionario.hashCode()));
+		
+		
 		CacheControl cc = new CacheControl();
-		cc.setMaxAge(300);
+		cc.setMaxAge(1000);
 		cc.setPrivate(true);
 		cc.setNoCache(false);
-		ResponseBuilder builder = Response.ok(funcionarioDAO.find(Funcionario.class, matricula), "application/json");
+		
+		ResponseBuilder builder = request.evaluatePreconditions(tag);
+		if(builder!= null){
+			builder.cacheControl(cc);
+			return builder.build();
+		}
+		
+		
+		 builder = Response.ok(funcionario, "application/json");
+		
 		builder.expires(Util.asDate(hojeMais2Minutos));
 		builder.cacheControl(cc);
+		builder.tag(tag);
 		return builder.build();
 	}
 

@@ -1,6 +1,7 @@
 package br.jus.trf1.pocArquitetura.entidades;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -49,5 +50,8 @@ public class Funcionario extends BaseEntity{
 		return null;
 	}
 	
-	
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.matricula, this.nome);
+	}
 }
