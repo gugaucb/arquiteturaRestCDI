@@ -1,5 +1,8 @@
 package br.jus.trf1.pocArquitetura.services;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Random;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +29,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import br.jus.trf1.pocArquitetura.dao.FuncionarioDAO;
 import br.jus.trf1.pocArquitetura.entidades.Acumulador;
 import br.jus.trf1.pocArquitetura.entidades.Funcionario;
+import br.jus.trf1.pocArquitetura.util.Util;
 
 @Path("/")
 @Consumes({ "application/json" })
@@ -61,11 +65,15 @@ public class FuncionarioRestService {
 	@Path("cache/funcionario/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getFuncionarioCache(@PathParam("matricula") String matricula) {
+		LocalDateTime hoje = LocalDateTime.now();
+		LocalDateTime hojeMais2Minutos = hoje.plus(2, ChronoUnit.MINUTES);
+		
 		CacheControl cc = new CacheControl();
 		cc.setMaxAge(300);
 		cc.setPrivate(true);
 		cc.setNoCache(false);
 		ResponseBuilder builder = Response.ok(funcionarioDAO.find(Funcionario.class, matricula), "application/json");
+		builder.expires(Util.asDate(hojeMais2Minutos));
 		builder.cacheControl(cc);
 		return builder.build();
 	}
@@ -135,4 +143,6 @@ public class FuncionarioRestService {
 		System.out.println("Thread Requisicao: " + initialThread + " in complete...");
 
 	}
+	
+	
 }
