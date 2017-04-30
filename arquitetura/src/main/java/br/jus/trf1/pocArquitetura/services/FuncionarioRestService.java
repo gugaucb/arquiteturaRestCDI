@@ -58,12 +58,35 @@ public class FuncionarioRestService {
 		Funcionario func = funcionarioDAO.save(funcionario);
 		return Response.status(200).entity(func).build();
 	}
-	
+
 	@PUT
 	@Path("funcionarios")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response atualizar(Funcionario funcionario) {
 		Funcionario func = funcionarioDAO.merge(funcionario);
+		return Response.status(200).entity(func).build();
+	}
+
+	@PUT
+	@Path("cache/funcionarios")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response atualizarComCache(Funcionario funcionario, @Context Request request) {
+		ZoneId zone = ZoneId.of("Brazil/East");
+		LocalDateTime hoje = LocalDateTime.now(zone);
+		
+		Funcionario func = funcionarioDAO.find(Funcionario.class, funcionario.getMatricula());
+		EntityTag tag = new EntityTag(Integer.toString(func.hashCode()));
+
+		ResponseBuilder builder = request.evaluatePreconditions(tag);
+		
+		if(builder!=null){
+			System.out.println("Não fiz o merge "+hoje);
+			return Response.status(204).build();
+		}
+		
+		
+		func = funcionarioDAO.merge(funcionario);
+		System.out.println("Fiz o merge "+hoje);
 		return Response.status(200).entity(func).build();
 	}
 
@@ -74,41 +97,39 @@ public class FuncionarioRestService {
 
 		return funcionarioDAO.find(Funcionario.class, matricula);
 	}
-	
+
 	@GET
 	@Path("cache/funcionario/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getFuncionarioCache(@PathParam("matricula") String matricula, @Context Request request) {
-		 ZoneId zone = ZoneId.of("Brazil/East");
+		ZoneId zone = ZoneId.of("Brazil/East");
 		LocalDateTime hoje = LocalDateTime.now(zone);
 		LocalDateTime hojeMais2Minutos = hoje.plus(1, ChronoUnit.MINUTES);
 		System.out.println(hoje);
 		System.out.println(hojeMais2Minutos);
 		Funcionario funcionario = funcionarioDAO.find(Funcionario.class, matricula);
-		if(funcionario==null){
+		if (funcionario == null) {
 			funcionario = new Funcionario();
 		}
 		EntityTag tag = new EntityTag(Integer.toString(funcionario.hashCode()));
-		
-		
+
 		CacheControl cc = new CacheControl();
 		cc.setMaxAge(60);
 		cc.setPrivate(true);
 		cc.setNoCache(false);
 		cc.setSMaxAge(60);
-		
+
 		ResponseBuilder builder = request.evaluatePreconditions(tag);
-		if(builder!= null){
+		if (builder != null) {
 			Date asDate = Util.asDate(hojeMais2Minutos);
 			System.out.println(asDate);
 			builder.expires(asDate);
 			builder.cacheControl(cc);
 			return builder.build();
 		}
-		
-		
-		 builder = Response.ok(funcionario, "application/json");
-		
+
+		builder = Response.ok(funcionario, "application/json");
+
 		Date asDate = Util.asDate(hojeMais2Minutos);
 		System.out.println(asDate);
 		builder.expires(asDate);
@@ -123,7 +144,7 @@ public class FuncionarioRestService {
 	@Asynchronous
 	public void getFuncionarioAsyncro(@PathParam("matricula") final String matricula,
 			@Suspended final AsyncResponse asyncResponse) {
-		
+
 		String initialThread = Thread.currentThread().getName();
 		System.out.println(
 				"Quantidade: " + acumulador.getQuantidade() + " Thread Requisicao: " + initialThread + " in action...");
@@ -182,6 +203,5 @@ public class FuncionarioRestService {
 		System.out.println("Thread Requisicao: " + initialThread + " in complete...");
 
 	}
-	
-	
+
 }
