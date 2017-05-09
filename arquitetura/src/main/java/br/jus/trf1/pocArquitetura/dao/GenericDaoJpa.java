@@ -27,7 +27,7 @@ import br.jus.trf1.pocArquitetura.entidades.BaseEntity;
  * as String's. Probably something that could be better since that's what JPA's criteria
  * API is all about.
  * 
- * @author Rodrigo Uchôa (http://rodrigouchoa.wordpress.com)
+ * @author Rodrigo Uchï¿½a (http://rodrigouchoa.wordpress.com)
  *
  */
 @Stateless
@@ -135,9 +135,6 @@ public class GenericDaoJpa <T> {
 		
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<T> cq = cb.createQuery(clazz);
-		Root<T> root = cq.from(clazz);
-		//cq.where(cb.like(cb.lower(root.get(propertyName)), value));
-		
 		return entityManager.createQuery(cq).getResultList();
 	}
 	

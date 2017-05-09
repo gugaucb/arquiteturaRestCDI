@@ -54,7 +54,7 @@ public class FuncionarioRestService {
 	@POST
 	@Path("funcionarios")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response simpleRest(Funcionario funcionario) {
+	public Response salvar(Funcionario funcionario) {
 		Funcionario func = funcionarioDAO.save(funcionario);
 		return Response.status(200).entity(func).build();
 	}
@@ -66,27 +66,28 @@ public class FuncionarioRestService {
 		Funcionario func = funcionarioDAO.merge(funcionario);
 		return Response.status(200).entity(func).build();
 	}
-
+	
+	/**
+	 * Antes de realizar o update do BD verifica se o objeto foi realmente alterado
+	 * @param funcionario
+	 * @param request
+	 * @return
+	 */
 	@PUT
 	@Path("cache/funcionarios")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response atualizarComCache(Funcionario funcionario, @Context Request request) {
-		ZoneId zone = ZoneId.of("Brazil/East");
-		LocalDateTime hoje = LocalDateTime.now(zone);
 		
 		Funcionario func = funcionarioDAO.find(Funcionario.class, funcionario.getMatricula());
 		EntityTag tag = new EntityTag(Integer.toString(func.hashCode()));
-
+		//Verifica se o objeto recebido no request é igual o objeto que está no BD
 		ResponseBuilder builder = request.evaluatePreconditions(tag);
 		
 		if(builder!=null){
-			System.out.println("Não fiz o merge "+hoje);
 			return Response.status(204).build();
 		}
 		
-		
 		func = funcionarioDAO.merge(funcionario);
-		System.out.println("Fiz o merge "+hoje);
 		return Response.status(200).entity(func).build();
 	}
 
@@ -97,7 +98,12 @@ public class FuncionarioRestService {
 
 		return funcionarioDAO.find(Funcionario.class, matricula);
 	}
-
+	/**
+	 * Utiliza estratégia de cache para evitar consulta ao BD desnecessária
+	 * @param matricula
+	 * @param request
+	 * @return
+	 */
 	@GET
 	@Path("cache/funcionario/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -105,29 +111,33 @@ public class FuncionarioRestService {
 		ZoneId zone = ZoneId.of("Brazil/East");
 		LocalDateTime hoje = LocalDateTime.now(zone);
 		LocalDateTime hojeMais2Minutos = hoje.plus(1, ChronoUnit.MINUTES);
-		System.out.println(hoje);
-		System.out.println(hojeMais2Minutos);
+		
 		Funcionario funcionario = funcionarioDAO.find(Funcionario.class, matricula);
+		
 		if (funcionario == null) {
 			funcionario = new Funcionario();
 		}
 		EntityTag tag = new EntityTag(Integer.toString(funcionario.hashCode()));
-
+		
+		
 		CacheControl cc = new CacheControl();
-		cc.setMaxAge(60);
+		cc.setMaxAge(60); //Define a idade mínima da resposta json no cache (nesse caso 60 segundos)
 		cc.setPrivate(true);
 		cc.setNoCache(false);
 		cc.setSMaxAge(60);
-
+		
+		//verifica se o cache está válido
 		ResponseBuilder builder = request.evaluatePreconditions(tag);
+		// se for diferente de null o cache está válido
 		if (builder != null) {
+			//se cache válido devolve codigo 304 e revalida o cache por mais 2 minutos 
 			Date asDate = Util.asDate(hojeMais2Minutos);
-			System.out.println(asDate);
 			builder.expires(asDate);
 			builder.cacheControl(cc);
 			return builder.build();
 		}
-
+		
+		
 		builder = Response.ok(funcionario, "application/json");
 
 		Date asDate = Util.asDate(hojeMais2Minutos);
@@ -137,7 +147,11 @@ public class FuncionarioRestService {
 		builder.tag(tag);
 		return builder.build();
 	}
-
+	/**
+	 * Implementa serviço assincrono. Permite melhor gestão das requisições.
+	 * @param matricula
+	 * @param asyncResponse
+	 */
 	@GET
 	@Path("async/funcionario/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -155,7 +169,6 @@ public class FuncionarioRestService {
 		} else {
 			acumulador.soma();
 			final Future<?> atividade = managedExecutorService.submit(new Runnable() {
-				@Override
 				public void run() {
 					String initialThread = Thread.currentThread().getName();
 					System.out.println("Thread Assincrona: " + initialThread + " in action...");
@@ -176,7 +189,6 @@ public class FuncionarioRestService {
 			});
 
 			asyncResponse.register(new CompletionCallback() {
-				@Override
 				public void onComplete(Throwable throwable) {
 					if (throwable == null) {
 						// Everything is good. Response has been successfully
