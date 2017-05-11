@@ -5,7 +5,6 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Random;
-import java.util.TimeZone;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -13,6 +12,7 @@ import javax.annotation.Resource;
 import javax.ejb.Asynchronous;
 import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -66,9 +66,11 @@ public class FuncionarioRestService {
 		Funcionario func = funcionarioDAO.merge(funcionario);
 		return Response.status(200).entity(func).build();
 	}
-	
+
 	/**
-	 * Antes de realizar o update do BD verifica se o objeto foi realmente alterado
+	 * Antes de realizar o update do BD verifica se o objeto foi realmente
+	 * alterado
+	 * 
 	 * @param funcionario
 	 * @param request
 	 * @return
@@ -77,16 +79,18 @@ public class FuncionarioRestService {
 	@Path("cache/funcionarios")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response atualizarComCache(Funcionario funcionario, @Context Request request) {
-		
+
 		Funcionario func = funcionarioDAO.find(Funcionario.class, funcionario.getMatricula());
-		EntityTag tag = new EntityTag(Integer.toString(func.hashCode()));
-		//Verifica se o objeto recebido no request é igual o objeto que está no BD
-		ResponseBuilder builder = request.evaluatePreconditions(tag);
-		
-		if(builder!=null){
-			return Response.status(204).build();
+		if (func != null) {
+			EntityTag tag = new EntityTag(Integer.toString(func.hashCode()));
+			// Verifica se o objeto recebido no request é igual o objeto que
+			// está no BD
+			ResponseBuilder builder = request.evaluatePreconditions(tag);
+
+			if (builder != null) {
+				return Response.status(204).build();
+			}
 		}
-		
 		func = funcionarioDAO.merge(funcionario);
 		return Response.status(200).entity(func).build();
 	}
@@ -98,8 +102,10 @@ public class FuncionarioRestService {
 
 		return funcionarioDAO.find(Funcionario.class, matricula);
 	}
+
 	/**
 	 * Utiliza estratégia de cache para evitar consulta ao BD desnecessária
+	 * 
 	 * @param matricula
 	 * @param request
 	 * @return
@@ -111,35 +117,40 @@ public class FuncionarioRestService {
 		ZoneId zone = ZoneId.of("Brazil/East");
 		LocalDateTime hoje = LocalDateTime.now(zone);
 		LocalDateTime hojeMais2Minutos = hoje.plus(1, ChronoUnit.MINUTES);
+
 		
-		Funcionario funcionario = funcionarioDAO.find(Funcionario.class, matricula);
-		
-		if (funcionario == null) {
-			funcionario = new Funcionario();
-		}
-		EntityTag tag = new EntityTag(Integer.toString(funcionario.hashCode()));
-		
-		
+		ResponseBuilder builder;
+		EntityTag tag;
 		CacheControl cc = new CacheControl();
-		cc.setMaxAge(60); //Define a idade mínima da resposta json no cache (nesse caso 60 segundos)
+		cc.setMaxAge(60); // Define a idade mínima da resposta json no cache
+							// (nesse caso 60 segundos)
 		cc.setPrivate(true);
 		cc.setNoCache(false);
 		cc.setSMaxAge(60);
 		
-		//verifica se o cache está válido
-		ResponseBuilder builder = request.evaluatePreconditions(tag);
-		// se for diferente de null o cache está válido
-		if (builder != null) {
-			//se cache válido devolve codigo 304 e revalida o cache por mais 2 minutos 
-			Date asDate = Util.asDate(hojeMais2Minutos);
-			builder.expires(asDate);
-			builder.cacheControl(cc);
-			return builder.build();
-		}
+		Funcionario funcionario = funcionarioDAO.find(Funcionario.class, matricula);
 		
-		
-		builder = Response.ok(funcionario, "application/json");
+		if (funcionario != null) {
 
+			tag = new EntityTag(Integer.toString(funcionario.hashCode()));
+
+			
+
+			// verifica se o cache está válido
+			builder = request.evaluatePreconditions(tag);
+			// se for diferente de null o cache está válido
+			if (builder != null) {
+				// se cache válido devolve codigo 304 e revalida o cache por
+				// mais 2 minutos
+				Date asDate = Util.asDate(hojeMais2Minutos);
+				builder.expires(asDate);
+				builder.cacheControl(cc);
+				return builder.build();
+			}
+		}
+
+		builder = Response.ok(funcionario, "application/json");
+		tag = new EntityTag(Integer.toString(funcionario.hashCode()));
 		Date asDate = Util.asDate(hojeMais2Minutos);
 		System.out.println(asDate);
 		builder.expires(asDate);
@@ -147,8 +158,10 @@ public class FuncionarioRestService {
 		builder.tag(tag);
 		return builder.build();
 	}
+
 	/**
 	 * Implementa serviço assincrono. Permite melhor gestão das requisições.
+	 * 
 	 * @param matricula
 	 * @param asyncResponse
 	 */
@@ -168,27 +181,12 @@ public class FuncionarioRestService {
 			System.out.println("Requisicao Cancelada.");
 		} else {
 			acumulador.soma();
-			final Future<?> atividade = managedExecutorService.submit(new Runnable() {
-				public void run() {
-					String initialThread = Thread.currentThread().getName();
-					System.out.println("Thread Assincrona: " + initialThread + " in action...");
-					heavyLifting();
-					asyncResponse.resume(funcionarioDAO.find(Funcionario.class, matricula));
-					System.out.println("Thread Assincrona: " + initialThread + " in complete...");
-				}
-
-				private String heavyLifting() {
-					try {
-						Thread.sleep(new Random().nextInt(2000));
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					return "RESULT";
-				}
-			});
+			
+			//TODO verificar como injetar dependência em um Runnable
+			final Future<?> atividade = managedExecutorService.submit(new ProcessoAsync(funcionarioDAO, matricula, asyncResponse));
 
 			asyncResponse.register(new CompletionCallback() {
+				@Override
 				public void onComplete(Throwable throwable) {
 					if (throwable == null) {
 						// Everything is good. Response has been successfully
@@ -202,6 +200,7 @@ public class FuncionarioRestService {
 					}
 				}
 			}, new ConnectionCallback() {
+				@Override
 				public void onDisconnect(AsyncResponse disconnected) {
 					// Connection lost or closed by the client!
 					System.out.println("Connection lost or closed by the client!");
@@ -210,7 +209,7 @@ public class FuncionarioRestService {
 				}
 			});
 		}
-		asyncResponse.setTimeout(40, TimeUnit.SECONDS);
+		asyncResponse.setTimeout(60, TimeUnit.SECONDS);
 
 		System.out.println("Thread Requisicao: " + initialThread + " in complete...");
 

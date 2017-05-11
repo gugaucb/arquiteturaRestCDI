@@ -6,13 +6,16 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.ejb.Stateless;
+import javax.enterprise.context.Dependent;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Root;
+import javax.transaction.Transactional;
 import javax.ws.rs.NotFoundException;
 
 import me.pocArquitetura.entidades.BaseEntity;
@@ -30,7 +33,8 @@ import me.pocArquitetura.entidades.BaseEntity;
  * @author Rodrigo Uch�a (http://rodrigouchoa.wordpress.com)
  *
  */
-@Stateless
+@Named
+@Dependent
 public class GenericDaoJpa <T> {
 	
 	/*
@@ -51,6 +55,7 @@ public class GenericDaoJpa <T> {
 	 * @return 
 	 * @return newly created id for the entity.
 	 */
+	@Transactional
 	public <T extends BaseEntity<?>>  T save(T entity) {
 		entityManager.persist(entity);
 		return entity;
@@ -64,6 +69,7 @@ public class GenericDaoJpa <T> {
 	 * @param entity
 	 * @return a newly created instance merged.
 	 */
+	@Transactional
 	public <T extends BaseEntity<PK>, PK extends Serializable> T merge(T entity) {
 		return entityManager.merge(entity);
 	}
@@ -75,6 +81,7 @@ public class GenericDaoJpa <T> {
 	 * @param id
 	 * @throws NotFoundException if the id does not exist.
 	 */
+	@Transactional
 	public <T extends BaseEntity<PK>, PK extends Serializable> void delete(Class<T> clazz, PK id) {
 		T entity = find(clazz, id);
 		if (entity != null) {
@@ -91,6 +98,7 @@ public class GenericDaoJpa <T> {
 	 * @param id
 	 * @return
 	 */
+	@Transactional
 	public <T extends BaseEntity<?>> T find(Class<T> clazz, Serializable id) {
 		return entityManager.find(clazz, id);
 	}
