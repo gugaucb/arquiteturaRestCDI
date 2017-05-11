@@ -1,10 +1,10 @@
-package br.jus.trf1.pocArquitetura.dao;
+package me.pocArquitetura.dao;
 
 import javax.ejb.Stateless;
 import javax.enterprise.inject.Default;
 import javax.transaction.Transactional;
 
-import br.jus.trf1.pocArquitetura.entidades.Funcionario;
+import me.pocArquitetura.entidades.Funcionario;
 
 @Stateless
 @Default

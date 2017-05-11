@@ -1,4 +1,4 @@
-package br.jus.trf1.pocArquitetura.dao;
+package me.pocArquitetura.dao;
 
 
 
@@ -15,7 +15,7 @@ import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Root;
 import javax.ws.rs.NotFoundException;
 
-import br.jus.trf1.pocArquitetura.entidades.BaseEntity;
+import me.pocArquitetura.entidades.BaseEntity;
 
 /**
  * A generic dao implementation based solely on JPA.

@@ -1,4 +1,4 @@
-package br.jus.trf1.pocArquitetura.dao;
+package me.pocArquitetura.dao;
 
 import java.util.List;
 
@@ -7,7 +7,7 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import br.jus.trf1.pocArquitetura.entidades.BaseEntity;
+import me.pocArquitetura.entidades.BaseEntity;
 
 @Stateless
 public class GenericDao<T extends BaseEntity> {

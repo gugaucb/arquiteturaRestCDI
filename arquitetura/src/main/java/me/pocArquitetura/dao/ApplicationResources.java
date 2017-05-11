@@ -1,4 +1,4 @@
-package br.jus.trf1.pocArquitetura.dao;
+package me.pocArquitetura.dao;
 
 import javax.ejb.Singleton;
 import javax.ejb.Startup;

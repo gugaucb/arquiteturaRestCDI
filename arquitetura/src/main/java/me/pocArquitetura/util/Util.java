@@ -1,4 +1,4 @@
-package br.jus.trf1.pocArquitetura.util;
+package me.pocArquitetura.util;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

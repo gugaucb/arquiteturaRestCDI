@@ -1,4 +1,4 @@
-package br.jus.trf1.pocArquitetura.rest;
+package me.pocArquitetura.rest;
 
 import java.io.IOException;
 

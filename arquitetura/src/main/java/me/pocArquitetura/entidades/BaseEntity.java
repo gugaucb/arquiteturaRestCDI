@@ -1,4 +1,4 @@
-package br.jus.trf1.pocArquitetura.entidades;
+package me.pocArquitetura.entidades;
 
 import java.io.Serializable;
 

@@ -1,4 +1,4 @@
-package br.jus.trf1.pocArquitetura.services;
+package me.pocArquitetura.services;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -32,10 +32,10 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-import br.jus.trf1.pocArquitetura.dao.FuncionarioDAO;
-import br.jus.trf1.pocArquitetura.entidades.Acumulador;
-import br.jus.trf1.pocArquitetura.entidades.Funcionario;
-import br.jus.trf1.pocArquitetura.util.Util;
+import me.pocArquitetura.dao.FuncionarioDAO;
+import me.pocArquitetura.entidades.Acumulador;
+import me.pocArquitetura.entidades.Funcionario;
+import me.pocArquitetura.util.Util;
 
 @Path("/")
 @Consumes({ "application/json" })
