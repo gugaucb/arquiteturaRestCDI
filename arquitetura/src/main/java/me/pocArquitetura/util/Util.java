@@ -15,4 +15,9 @@ public class Util {
 	public static Date asDate(LocalDateTime localDateTime) {
 		return Date.from(localDateTime.atZone(zone).toInstant());
 	}
+	
+	public static Date createData(Long timeInMiliseconds){
+		return new Date(timeInMiliseconds);
+	}
+	
 }
