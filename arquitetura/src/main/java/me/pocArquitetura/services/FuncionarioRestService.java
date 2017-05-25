@@ -11,6 +11,8 @@ import javax.annotation.Resource;
 import javax.ejb.Asynchronous;
 import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.inject.Inject;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -96,7 +98,10 @@ public class FuncionarioRestService {
 	@GET
 	@Path("funcionario/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Funcionario getFuncionario(@PathParam("matricula") String matricula) {
+	public Funcionario getFuncionario(
+			@NotNull 
+			@Size(min = 5, max = 11, message = "A matricula deve ter entre 5 a 11 caracteres.") 
+			@PathParam("matricula") String matricula) {
 
 		return funcionarioDAO.find(Funcionario.class, matricula);
 	}
@@ -111,12 +116,14 @@ public class FuncionarioRestService {
 	@GET
 	@Path("cache/funcionario/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getFuncionarioCache(@PathParam("matricula") String matricula, @Context Request request) {
+	public Response getFuncionarioCache(
+			@NotNull 
+			@Size(min = 5, max = 11, message = "A matricula deve ter entre 5 a 11 caracteres.")
+			@PathParam("matricula") String matricula, @Context Request request) {
 		ZoneId zone = ZoneId.of("Brazil/East");
 		LocalDateTime hoje = LocalDateTime.now(zone);
 		LocalDateTime hojeMais2Minutos = hoje.plus(1, ChronoUnit.MINUTES);
 
-		
 		ResponseBuilder builder;
 		EntityTag tag;
 		CacheControl cc = new CacheControl();
@@ -125,14 +132,12 @@ public class FuncionarioRestService {
 		cc.setPrivate(true);
 		cc.setNoCache(false);
 		cc.setSMaxAge(60);
-		
+
 		Funcionario funcionario = funcionarioDAO.find(Funcionario.class, matricula);
-		
+
 		if (funcionario != null) {
 
 			tag = new EntityTag(Integer.toString(funcionario.hashCode()));
-
-			
 
 			// verifica se o cache está válido
 			builder = request.evaluatePreconditions(tag);
@@ -167,7 +172,10 @@ public class FuncionarioRestService {
 	@Path("async/funcionario/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Asynchronous
-	public void getFuncionarioAsyncro(@PathParam("matricula") final String matricula,
+	public void getFuncionarioAsyncro(
+			@NotNull 
+			@Size(min = 5, max = 11, message = "A matricula deve ter entre 5 a 11 caracteres.")
+			@PathParam("matricula") final String matricula,
 			@Suspended final AsyncResponse asyncResponse) {
 
 		String initialThread = Thread.currentThread().getName();
@@ -179,9 +187,10 @@ public class FuncionarioRestService {
 			System.out.println("Requisicao Cancelada.");
 		} else {
 			acumulador.soma();
-			
-			//TODO verificar como injetar dependência em um Runnable
-			final Future<?> atividade = managedExecutorService.submit(new ProcessoAsync(funcionarioDAO, matricula, asyncResponse));
+
+			// TODO verificar como injetar dependência em um Runnable
+			final Future<?> atividade = managedExecutorService
+					.submit(new ProcessoAsync(funcionarioDAO, matricula, asyncResponse));
 
 			asyncResponse.register(new CompletionCallback() {
 				@Override
@@ -196,10 +205,9 @@ public class FuncionarioRestService {
 						System.out.println("An error has occurred during request processing");
 						acumulador.subtrai();
 					}
-					
+
 				}
 
-				
 			}, new ConnectionCallback() {
 				@Override
 				public void onDisconnect(AsyncResponse disconnected) {
