@@ -36,6 +36,10 @@ public class Funcionario extends BaseEntity {
 		this.nome = nome;
 	}
 
+	public Funcionario(String matricula) {
+		this.matricula = matricula;
+	}
+
 	public String getNome() {
 		return nome;
 	}

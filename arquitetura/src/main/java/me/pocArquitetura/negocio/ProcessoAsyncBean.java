@@ -1,20 +1,23 @@
-package me.pocArquitetura.services;
+package me.pocArquitetura.negocio;
 
 import java.util.Random;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.ws.rs.container.AsyncResponse;
 
 import me.pocArquitetura.dao.FuncionarioDAO;
 import me.pocArquitetura.entidades.Funcionario;
 
-public class ProcessoAsync implements Runnable {
-	private FuncionarioDAO funcionarioDAO;
+@Named
+public class ProcessoAsyncBean implements Runnable, Bean {
+	@Inject
+	private FuncionarioBean funcionarioBean;
 	private String matricula;
 	private AsyncResponse asyncResponse;
 	
 	
-	public ProcessoAsync(FuncionarioDAO funcionarioDAO, String matricula, AsyncResponse asyncResponse) {
-		this.funcionarioDAO = funcionarioDAO;
+	public ProcessoAsyncBean(String matricula, AsyncResponse asyncResponse) {
 		this.matricula = matricula;
 		this.asyncResponse = asyncResponse;
 	}
@@ -24,9 +27,9 @@ public class ProcessoAsync implements Runnable {
 		String initialThread = Thread.currentThread().getName();
 		System.out.println("Thread Assincrona: " + initialThread + " in action...");
 		heavyLifting();
-		//asyncResponse.resume(funcionarioDAO.find(Funcionario.class, matricula));
+		asyncResponse.resume(funcionarioBean.recuperarFuncionarioPorMatricula(new Funcionario(matricula)));
 		//Funcionario f = funcionarioDAO.find(Funcionario.class, matricula);
-		asyncResponse.resume(new Funcionario());
+		//asyncResponse.resume(new Funcionario());
 		System.out.println("Thread Assincrona: " + initialThread + " in complete...");
 		
 	}

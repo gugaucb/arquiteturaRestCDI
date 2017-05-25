@@ -31,22 +31,25 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
 
-import me.pocArquitetura.dao.FuncionarioDAO;
 import me.pocArquitetura.entidades.Acumulador;
 import me.pocArquitetura.entidades.Funcionario;
+import me.pocArquitetura.negocio.FuncionarioBean;
+import me.pocArquitetura.negocio.ProcessoAsyncBean;
 import me.pocArquitetura.util.Util;
 
 @Path("/")
 @Consumes({ "application/json" })
 @Produces({ "application/json" })
-public class FuncionarioRestService {
+public class FuncionarioResource {
 
 	@Inject
 	private Acumulador acumulador;
 
 	@Inject
-	FuncionarioDAO funcionarioDAO;
+	FuncionarioBean funcionarioBean;
 
 	@Resource
 	ManagedExecutorService managedExecutorService;
@@ -54,17 +57,17 @@ public class FuncionarioRestService {
 	@POST
 	@Path("funcionarios")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response salvar(Funcionario funcionario) {
-		Funcionario func = funcionarioDAO.save(funcionario);
-		return Response.status(200).entity(func).build();
+	public Response salvar(Funcionario funcionario, @Context UriInfo uriInfo) {
+		Funcionario funcionarioCadastrado = funcionarioBean.admitir(funcionario);
+		return Response.status(200).entity(funcionarioCadastrado).build();
 	}
 
 	@PUT
 	@Path("funcionarios")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response atualizar(Funcionario funcionario) {
-		Funcionario func = funcionarioDAO.merge(funcionario);
-		return Response.status(200).entity(func).build();
+		Funcionario funcionarioAlterado = funcionarioBean.alterarDadosCadastrais(funcionario);
+		return Response.status(200).entity(funcionarioAlterado).build();
 	}
 
 	/**
@@ -79,35 +82,41 @@ public class FuncionarioRestService {
 	@Path("cache/funcionarios")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response atualizarComCache(Funcionario funcionario, @Context Request request) {
-
-		Funcionario func = funcionarioDAO.find(Funcionario.class, funcionario.getMatricula());
-		if (func != null) {
-			EntityTag tag = new EntityTag(Integer.toString(func.hashCode()));
-			// Verifica se o objeto recebido no request é igual o objeto que
-			// está no BD
-			ResponseBuilder builder = request.evaluatePreconditions(tag);
-
-			if (builder != null) {
-				return Response.status(204).build();
-			}
+		ResponseBuilder builder = IsObjetoIgualAoExistente(funcionario, request);
+		if (builder!=null) {
+			return builder.status(204).build();
 		}
-		func = funcionarioDAO.merge(funcionario);
-		return Response.status(200).entity(func).build();
+
+		Funcionario funcionarioAlterado = funcionarioBean.alterarDadosCadastrais(funcionario);
+		return Response.status(Status.OK).entity(funcionarioAlterado).build();
+	}
+
+	private ResponseBuilder IsObjetoIgualAoExistente(Funcionario funcionario, Request request) {
+		Funcionario funcionarioRecuperado = funcionarioBean.recuperarFuncionarioPorMatricula(funcionario);
+		if (funcionarioRecuperado != null) {
+			EntityTag tag = new EntityTag(Integer.toString(funcionarioRecuperado.hashCode()));
+			// Verifica se o objeto recebido no request Ã© igual o objeto que
+			// estÃ¡ no BD
+			ResponseBuilder builder = request.evaluatePreconditions(tag);
+			// se for diferente de null o cache estÃ¡ vÃ¡lido
+			return builder;
+		} else {
+			return null;
+		}
+
 	}
 
 	@GET
 	@Path("funcionario/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Funcionario getFuncionario(
-			@NotNull 
-			@Size(min = 5, max = 11, message = "A matricula deve ter entre 5 a 11 caracteres.") 
-			@PathParam("matricula") String matricula) {
+			@NotNull @Size(min = 5, max = 11, message = "A matricula deve ter entre 5 a 11 caracteres.") @PathParam("matricula") String matricula) {
 
-		return funcionarioDAO.find(Funcionario.class, matricula);
+		return funcionarioBean.recuperarFuncionarioPorMatricula(new Funcionario(matricula));
 	}
 
 	/**
-	 * Utiliza estratégia de cache para evitar consulta ao BD desnecessária
+	 * Utiliza estratÃ©gia de cache para evitar consulta ao BD desnecessÃ¡ria
 	 * 
 	 * @param matricula
 	 * @param request
@@ -117,53 +126,52 @@ public class FuncionarioRestService {
 	@Path("cache/funcionario/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getFuncionarioCache(
-			@NotNull 
-			@Size(min = 5, max = 11, message = "A matricula deve ter entre 5 a 11 caracteres.")
-			@PathParam("matricula") String matricula, @Context Request request) {
+			@NotNull @Size(min = 5, max = 11, message = "A matricula deve ter entre 5 a 11 caracteres.") @PathParam("matricula") String matricula,
+			@Context Request request) {
+
+		LocalDateTime hojeMais2Minutos = somarData(2, ChronoUnit.MINUTES);
+
+		Funcionario funcionario = new Funcionario(matricula);
+		ResponseBuilder builder = IsObjetoIgualAoExistente(funcionario, request);
+		Date asDate = Util.asDate(hojeMais2Minutos);
+		
+
+		if (builder != null) {
+			builder.expires(asDate);
+			builder.cacheControl(defineCacheDoRecurso());
+			return builder.status(Status.NOT_MODIFIED).build();
+		} else {
+			EntityTag tag = new EntityTag(Integer.toString(funcionario.hashCode()));
+			Funcionario funcionarioRecuperado = funcionarioBean.recuperarFuncionarioPorMatricula(funcionario);
+			return Response.status(Status.OK)
+					.cacheControl(defineCacheDoRecurso())
+					.tag(tag).
+					entity(funcionarioRecuperado)
+					.build();
+		}
+
+	}
+
+	private LocalDateTime somarData(int quantidade, ChronoUnit unidade) {
 		ZoneId zone = ZoneId.of("Brazil/East");
 		LocalDateTime hoje = LocalDateTime.now(zone);
-		LocalDateTime hojeMais2Minutos = hoje.plus(1, ChronoUnit.MINUTES);
+		LocalDateTime hojeMais2Minutos = hoje.plus(quantidade, unidade);
+		return hojeMais2Minutos;
+	}
 
-		ResponseBuilder builder;
-		EntityTag tag;
+	private CacheControl defineCacheDoRecurso() {
+
 		CacheControl cc = new CacheControl();
-		cc.setMaxAge(60); // Define a idade mínima da resposta json no cache
+		cc.setMaxAge(60); // Define a idade mÃ­nima da resposta json no cache
 							// (nesse caso 60 segundos)
 		cc.setPrivate(true);
 		cc.setNoCache(false);
 		cc.setSMaxAge(60);
-
-		Funcionario funcionario = funcionarioDAO.find(Funcionario.class, matricula);
-
-		if (funcionario != null) {
-
-			tag = new EntityTag(Integer.toString(funcionario.hashCode()));
-
-			// verifica se o cache está válido
-			builder = request.evaluatePreconditions(tag);
-			// se for diferente de null o cache está válido
-			if (builder != null) {
-				// se cache válido devolve codigo 304 e revalida o cache por
-				// mais 2 minutos
-				Date asDate = Util.asDate(hojeMais2Minutos);
-				builder.expires(asDate);
-				builder.cacheControl(cc);
-				return builder.build();
-			}
-		}
-
-		builder = Response.ok(funcionario, "application/json");
-		tag = new EntityTag(Integer.toString(funcionario.hashCode()));
-		Date asDate = Util.asDate(hojeMais2Minutos);
-		System.out.println(asDate);
-		builder.expires(asDate);
-		builder.cacheControl(cc);
-		builder.tag(tag);
-		return builder.build();
+		return cc;
 	}
 
 	/**
-	 * Implementa serviço assincrono. Permite melhor gestão das requisições.
+	 * Implementa serviÃ§o assincrono. Permite melhor gestÃ£o das requisiÃ§Ãµes.
 	 * 
 	 * @param matricula
 	 * @param asyncResponse
@@ -173,10 +181,10 @@ public class FuncionarioRestService {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Asynchronous
 	public void getFuncionarioAsyncro(
-			@NotNull 
-			@Size(min = 5, max = 11, message = "A matricula deve ter entre 5 a 11 caracteres.")
-			@PathParam("matricula") final String matricula,
+			@NotNull @Size(min = 5, max = 11, message = "A matricula deve ter entre 5 a 11 caracteres.") @PathParam("matricula") final String matricula,
 			@Suspended final AsyncResponse asyncResponse) {
+
+		// TODO Refatorar
 
 		String initialThread = Thread.currentThread().getName();
 		System.out.println(
@@ -188,9 +196,8 @@ public class FuncionarioRestService {
 		} else {
 			acumulador.soma();
 
-			// TODO verificar como injetar dependência em um Runnable
-			final Future<?> atividade = managedExecutorService
-					.submit(new ProcessoAsync(funcionarioDAO, matricula, asyncResponse));
+			// TODO verificar como injetar dependÃªncia em um Runnable
+			final Future<?> atividade = managedExecutorService.submit(new ProcessoAsyncBean(matricula, asyncResponse));
 
 			asyncResponse.register(new CompletionCallback() {
 				@Override
