@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.Random;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -12,7 +11,6 @@ import javax.annotation.Resource;
 import javax.ejb.Asynchronous;
 import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -198,7 +196,10 @@ public class FuncionarioRestService {
 						System.out.println("An error has occurred during request processing");
 						acumulador.subtrai();
 					}
+					
 				}
+
+				
 			}, new ConnectionCallback() {
 				@Override
 				public void onDisconnect(AsyncResponse disconnected) {
