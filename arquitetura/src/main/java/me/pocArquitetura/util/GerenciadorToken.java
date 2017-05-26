@@ -16,7 +16,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import me.pocArquitetura.constantes.Constantes;
 
 /**
- * Classe de gerenciamento de tokens: geração, validação e recuperação de dados
+ * Classe de gerenciamento de tokens: geraï¿½ï¿½o, validaï¿½ï¿½o e recuperaï¿½ï¿½o de dados
  * @author wallace
  * @since 14-05-2017
  *
@@ -81,26 +81,26 @@ public class GerenciadorToken {
 		validarFraseSecreta();
 		
 		if (this.tempoExpiracao == 0){
-			throw new IllegalArgumentException("Tempo de expiração é obrigatório!");
+			throw new IllegalArgumentException("Tempo de expiraï¿½ï¿½o ï¿½ obrigatï¿½rio!");
 		}
 		
 		if (this.dadosDoUsuario == null || this.dadosDoUsuario.length == 0 ){
-			throw new IllegalArgumentException("Dados do usuário são obrigatórios!");
+			throw new IllegalArgumentException("Dados do usuï¿½rio sï¿½o obrigatï¿½rios!");
 		}
 	}
 
 	private void validarFraseSecreta() {
 		if (this.fraseSecreta == null || this.fraseSecreta.isEmpty()){
-			throw new IllegalArgumentException("Frase secreta é obrigatória!");
+			throw new IllegalArgumentException("Frase secreta ï¿½ obrigatï¿½ria!");
 		}
 	}
 
 	private String montarToken(LocalDateTime dataExpiracao, byte[] dadosCriptografados) {
 		System.out.println(dataExpiracao);
 		JwtBuilder builder = Jwts.builder()
-						.setIssuedAt(Util.asDate(LocalDate.now()))
+						.setIssuedAt(DateUtil.asDate(LocalDate.now()))
 						.setSubject(new String(dadosCriptografados))
-						.setExpiration(Util.asDate( dataExpiracao ) )
+						.setExpiration(DateUtil.asDate( dataExpiracao ) )
 						.signWith(algoritmoAssinatura, getSigningKey());
 		
 		return builder.compact();
@@ -119,7 +119,7 @@ public class GerenciadorToken {
 					.getBody();
 			return true;
 		} catch(Exception e){		
-			throw new TokenInvalidoException("Token Inválido");	
+			throw new TokenInvalidoException("Token Invï¿½lido");	
 		}
 	}
 	

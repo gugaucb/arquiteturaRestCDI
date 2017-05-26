@@ -1,9 +1,6 @@
 package me.pocArquitetura.services;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -24,7 +21,6 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.CompletionCallback;
 import javax.ws.rs.container.ConnectionCallback;
 import javax.ws.rs.container.Suspended;
-import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.MediaType;
@@ -38,16 +34,13 @@ import me.pocArquitetura.entidades.Acumulador;
 import me.pocArquitetura.entidades.Funcionario;
 import me.pocArquitetura.negocio.FuncionarioBean;
 import me.pocArquitetura.negocio.ProcessoAsyncBean;
-import me.pocArquitetura.util.Util;
+import me.pocArquitetura.util.DateUtil;
+import me.pocArquitetura.util.RestUtil;
 
 @Path("/")
 @Consumes({ "application/json" })
 @Produces({ "application/json" })
 public class FuncionarioResource {
-
-	@Inject
-	private Acumulador acumulador;
-
 	@Inject
 	FuncionarioBean funcionarioBean;
 
@@ -129,47 +122,20 @@ public class FuncionarioResource {
 			@NotNull @Size(min = 5, max = 11, message = "A matricula deve ter entre 5 a 11 caracteres.") @PathParam("matricula") String matricula,
 			@Context Request request) {
 
-		LocalDateTime hojeMais2Minutos = somarData(2, ChronoUnit.MINUTES);
-
 		Funcionario funcionario = new Funcionario(matricula);
 		ResponseBuilder builder = IsObjetoIgualAoExistente(funcionario, request);
-		Date asDate = Util.asDate(hojeMais2Minutos);
-		
-
 		if (builder != null) {
-			builder.expires(asDate);
-			builder.cacheControl(defineCacheDoRecurso());
+			builder.expires(DateUtil.somarData(2, ChronoUnit.MINUTES));
+			builder.cacheControl(RestUtil.defineCacheDoRecurso(60));
 			return builder.status(Status.NOT_MODIFIED).build();
 		} else {
 			EntityTag tag = new EntityTag(Integer.toString(funcionario.hashCode()));
 			Funcionario funcionarioRecuperado = funcionarioBean.recuperarFuncionarioPorMatricula(funcionario);
-			return Response.status(Status.OK)
-					.cacheControl(defineCacheDoRecurso())
-					.tag(tag).
-					entity(funcionarioRecuperado)
-					.build();
+			return Response.status(Status.OK).cacheControl(RestUtil.defineCacheDoRecurso(60)).tag(tag).entity(funcionarioRecuperado).build();
 		}
 
 	}
-
-	private LocalDateTime somarData(int quantidade, ChronoUnit unidade) {
-		ZoneId zone = ZoneId.of("Brazil/East");
-		LocalDateTime hoje = LocalDateTime.now(zone);
-		LocalDateTime hojeMais2Minutos = hoje.plus(quantidade, unidade);
-		return hojeMais2Minutos;
-	}
-
-	private CacheControl defineCacheDoRecurso() {
-
-		CacheControl cc = new CacheControl();
-		cc.setMaxAge(60); // Define a idade mÃ­nima da resposta json no cache
-							// (nesse caso 60 segundos)
-		cc.setPrivate(true);
-		cc.setNoCache(false);
-		cc.setSMaxAge(60);
-		return cc;
-	}
-
+	
 	/**
 	 * Implementa serviÃ§o assincrono. Permite melhor gestÃ£o das requisiÃ§Ãµes.
 	 * 
@@ -184,51 +150,24 @@ public class FuncionarioResource {
 			@NotNull @Size(min = 5, max = 11, message = "A matricula deve ter entre 5 a 11 caracteres.") @PathParam("matricula") final String matricula,
 			@Suspended final AsyncResponse asyncResponse) {
 
-		// TODO Refatorar
-
-		String initialThread = Thread.currentThread().getName();
-		System.out.println(
-				"Quantidade: " + acumulador.getQuantidade() + " Thread Requisicao: " + initialThread + " in action...");
-
-		if (acumulador.getQuantidade() > 100) {
-			asyncResponse.cancel();
-			System.out.println("Requisicao Cancelada.");
-		} else {
-			acumulador.soma();
-
-			// TODO verificar como injetar dependÃªncia em um Runnable
-			final Future<?> atividade = managedExecutorService.submit(new ProcessoAsyncBean(matricula, asyncResponse));
-
-			asyncResponse.register(new CompletionCallback() {
-				@Override
-				public void onComplete(Throwable throwable) {
-					if (throwable == null) {
-						// Everything is good. Response has been successfully
-						// dispatched to client
-						System.out.println("Everything is good. Response has been successfully");
-						acumulador.subtrai();
-					} else {
-						// An error has occurred during request processing
-						System.out.println("An error has occurred during request processing");
-						acumulador.subtrai();
+				asyncResponse.register(new CompletionCallback() {
+					@Override
+					public void onComplete(Throwable throwable) {
+						if (throwable == null) {
+							// Everything is good. Response has been successfully
+							// dispatched to client
+						} else {
+							// An error has occurred during request processing
+						}
 					}
+				}, new ConnectionCallback() {
+					@Override
+					public void onDisconnect(AsyncResponse disconnected) {
+						// Connection lost or closed by the client!
+					}
+				});
+			asyncResponse.setTimeout(60, TimeUnit.SECONDS);
 
-				}
-
-			}, new ConnectionCallback() {
-				@Override
-				public void onDisconnect(AsyncResponse disconnected) {
-					// Connection lost or closed by the client!
-					System.out.println("Connection lost or closed by the client!");
-					atividade.cancel(true);
-					acumulador.subtrai();
-				}
-			});
-		}
-		asyncResponse.setTimeout(60, TimeUnit.SECONDS);
-
-		System.out.println("Thread Requisicao: " + initialThread + " in complete...");
-
+			final Future<?> atividade = managedExecutorService.submit(new ProcessoAsyncBean(matricula, asyncResponse));
 	}
-
 }
