@@ -1,5 +1,6 @@
 package me.pocArquitetura.negocio;
 
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -9,6 +10,7 @@ import me.pocArquitetura.negocio.exceptions.DadoExistenteException;
 import me.pocArquitetura.negocio.exceptions.EntidadeNaoEncontradaException;
 
 @Named
+@RequestScoped
 public class FuncionarioBean implements Bean {
 	@Inject
 	FuncionarioDAO funcionarioDAO;

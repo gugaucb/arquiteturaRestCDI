@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Resource;
 import javax.ejb.Asynchronous;
 import javax.enterprise.concurrent.ManagedExecutorService;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -30,7 +31,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import me.pocArquitetura.entidades.Acumulador;
 import me.pocArquitetura.entidades.Funcionario;
 import me.pocArquitetura.negocio.FuncionarioBean;
 import me.pocArquitetura.negocio.ProcessoAsyncBean;
