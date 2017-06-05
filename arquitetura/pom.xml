@@ -16,9 +16,18 @@
 		</dependency>
 		<dependency>
 			<groupId>org.keycloak</groupId>
-			<artifactId>keycloak-admin-client</artifactId>
+			<artifactId>keycloak-authz-client</artifactId>
 			<version>3.0.0.Final</version>
+			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-server-spi-private</artifactId>
+			<version>3.0.0.Final</version>
+			<scope>provided</scope>
+		</dependency>
+
+
 
 		<dependency>
 			<groupId>javax</groupId>
@@ -26,22 +35,22 @@
 			<version>7.0</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<!-- jwt -->
 		<dependency>
-		    <groupId>io.jsonwebtoken</groupId>
-		    <artifactId>jjwt</artifactId>
-		    <version>0.7.0</version>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt</artifactId>
+			<version>0.7.0</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-all</artifactId>
 			<version>1.8.4</version>
 			<scope>test</scope>
 		</dependency>
-		
-		
+
+
 	</dependencies>
 	<build>
 		<finalName>arquitetura</finalName>

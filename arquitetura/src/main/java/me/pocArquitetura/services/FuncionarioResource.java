@@ -7,7 +7,6 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Resource;
 import javax.ejb.Asynchronous;
 import javax.enterprise.concurrent.ManagedExecutorService;
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -18,6 +17,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.CompletionCallback;
 import javax.ws.rs.container.ConnectionCallback;
@@ -37,7 +37,7 @@ import me.pocArquitetura.negocio.ProcessoAsyncBean;
 import me.pocArquitetura.util.DateUtil;
 import me.pocArquitetura.util.RestUtil;
 
-@Path("/")
+@Path("funcionarios")
 @Consumes({ "application/json" })
 @Produces({ "application/json" })
 public class FuncionarioResource {
@@ -48,7 +48,7 @@ public class FuncionarioResource {
 	ManagedExecutorService managedExecutorService;
 
 	@POST
-	@Path("funcionarios")
+	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response salvar(Funcionario funcionario, @Context UriInfo uriInfo) {
 		Funcionario funcionarioCadastrado = funcionarioBean.admitir(funcionario);
@@ -56,7 +56,7 @@ public class FuncionarioResource {
 	}
 
 	@PUT
-	@Path("funcionarios")
+	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response atualizar(Funcionario funcionario) {
 		Funcionario funcionarioAlterado = funcionarioBean.alterarDadosCadastrais(funcionario);
@@ -72,7 +72,7 @@ public class FuncionarioResource {
 	 * @return
 	 */
 	@PUT
-	@Path("cache/funcionarios")
+	@Path("cache")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response atualizarComCache(Funcionario funcionario, @Context Request request) {
 		ResponseBuilder builder = IsObjetoIgualAoExistente(funcionario, request);
@@ -100,11 +100,11 @@ public class FuncionarioResource {
 	}
 
 	@GET
-	@Path("funcionario/{matricula}")
+	@Path("/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Funcionario getFuncionario(
 			@NotNull @Size(min = 5, max = 11, message = "A matricula deve ter entre 5 a 11 caracteres.") @PathParam("matricula") String matricula) {
-
+		//Response.ok().header("Authorization: bearer", code).entity(funcionarioBean.recuperarFuncionarioPorMatricula(new Funcionario(matricula))).build();
 		return funcionarioBean.recuperarFuncionarioPorMatricula(new Funcionario(matricula));
 	}
 
@@ -116,7 +116,7 @@ public class FuncionarioResource {
 	 * @return
 	 */
 	@GET
-	@Path("cache/funcionario/{matricula}")
+	@Path("cache/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getFuncionarioCache(
 			@NotNull @Size(min = 5, max = 11, message = "A matricula deve ter entre 5 a 11 caracteres.") @PathParam("matricula") String matricula,
@@ -143,7 +143,7 @@ public class FuncionarioResource {
 	 * @param asyncResponse
 	 */
 	@GET
-	@Path("async/funcionario/{matricula}")
+	@Path("async/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Asynchronous
 	public void getFuncionarioAsyncro(
@@ -168,6 +168,6 @@ public class FuncionarioResource {
 				});
 			asyncResponse.setTimeout(60, TimeUnit.SECONDS);
 
-			final Future<?> atividade = managedExecutorService.submit(new ProcessoAsyncBean(matricula, asyncResponse));
+			final Future<?> atividade = managedExecutorService.submit(new ProcessoAsyncBean(matricula, asyncResponse, funcionarioBean));
 	}
 }
