@@ -31,6 +31,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+import me.pocArquitetura.annotations.Monitoring;
 import me.pocArquitetura.entidades.Funcionario;
 import me.pocArquitetura.negocio.FuncionarioBean;
 import me.pocArquitetura.negocio.ProcessoAsyncBean;
@@ -102,6 +103,7 @@ public class FuncionarioResource {
 	@GET
 	@Path("funcionario/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
+	@Monitoring
 	public Funcionario getFuncionario(
 			@NotNull @Size(min = 5, max = 11, message = "A matricula deve ter entre 5 a 11 caracteres.") @PathParam("matricula") String matricula) {
 
