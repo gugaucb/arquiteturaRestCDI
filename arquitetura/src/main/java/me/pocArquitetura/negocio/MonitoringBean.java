@@ -18,7 +18,7 @@ public class MonitoringBean implements Bean {
 	
 	public void recebeEstimuloExcecao(String metodo, Throwable t){
 		dataSet.recebeEstimuloExcecao(metodo, t.toString());
-		trapSenderVersion2.sendTrap_Version2(t, metodo);
+		//trapSenderVersion2.sendTrap_Version2(t, metodo);
 		
 	}
 	

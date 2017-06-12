@@ -1,6 +1,5 @@
 package me.pocArquitetura.entidades;
 
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,8 +12,15 @@ public class Dicionario {
 	
 	public Integer getPosicao(String metodo){
 		Integer posicao = listaMetodos.get(metodo);
+		Integer proximo;
 		if(posicao==null){
-			Integer proximo = listaMetodos.entrySet().stream().max((entry1, entry2) -> entry1.getValue() > entry2.getValue() ? 1 : -1).get().getValue();
+			if(!listaMetodos.isEmpty()){
+				proximo = listaMetodos.entrySet().stream().max((entry1, entry2) -> entry1.getValue() > entry2.getValue() ? 1 : -1).get().getValue();
+			}else{
+				proximo = 0;
+				listaMetodos.put(metodo, proximo);
+				
+			}
 			listaMetodos.put(metodo, ++proximo);
 			return proximo;
 		}
@@ -22,3 +28,5 @@ public class Dicionario {
 	}
 	
 }
+
+	
