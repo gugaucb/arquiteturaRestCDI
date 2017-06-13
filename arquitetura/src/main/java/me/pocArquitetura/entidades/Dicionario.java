@@ -2,6 +2,7 @@ package me.pocArquitetura.entidades;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.inject.Singleton;
 
@@ -25,6 +26,14 @@ public class Dicionario {
 			return proximo;
 		}
 		return posicao;
+	}
+
+
+	public void imprimir() {
+		Map<String, Integer> listaMetodos2 = listaMetodos;
+		for (Entry<String, Integer> metodo : listaMetodos2.entrySet()) {
+			System.out.println(metodo.getKey()+" - "+ metodo.getValue());
+		}
 	}
 	
 }

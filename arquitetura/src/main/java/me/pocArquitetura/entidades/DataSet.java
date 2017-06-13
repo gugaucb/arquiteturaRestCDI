@@ -1,8 +1,8 @@
 package me.pocArquitetura.entidades;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
 import javax.inject.Inject;
@@ -13,62 +13,55 @@ import me.pocArquitetura.util.EstatisticaAmbiente;
 @Singleton
 public class DataSet {
 	
+	private static final int QUANT_LIMITE_METODOS = 100;
+
 	@Inject
 	Dicionario dicionario;
 	
-	private Map<String, Vector<Long>> dataSet = new HashMap<String, Vector<Long>>();
+	//private List<Long> instancias = new ArrayList<Long>(QUANT_LIMITE_METODOS);
+	private Instancia instancias = new Instancia(QUANT_LIMITE_METODOS);
 	
+	public DataSet(){
+		super();
+		initVector();
+	}
 	
 	public void recebeEstimuloMetodo(String metodo, Duration duration){
-		 Vector<Long> instancias = getInstancia(metodo);
-		instancias.add(dicionario.getPosicao(metodo), duration.toMillis());
-		incluirCondicoesAmbientes(metodo, instancias);
+		Integer posicao = dicionario.getPosicao(metodo);
+		instancias.add(posicao, duration.toMillis());
+		incluirCondicoesAmbientes(metodo);
 		imprimeInstancias();
+		dicionario.imprimir();
 	}
 	
 	public void recebeEstimuloExcecao(String metodo, String excecao){
-		 Vector<Long> instancias = getInstancia(metodo);
-		instancias.add(dicionario.getPosicao(metodo+"-"+excecao), -1L);
-		incluirCondicoesAmbientes(metodo, instancias);
+		Integer posicao = dicionario.getPosicao(metodo+"-"+excecao);
+		instancias.add(posicao, -1L);
+		incluirCondicoesAmbientes(metodo);
 		imprimeInstancias();
-		
-		
+		dicionario.imprimir();
 	}
 	
 	private void receberEstimuloAmbiente(String metodoOrigem, String metodo, Long valor){ 
-		 Vector<Long> instancias = getInstancia(metodoOrigem);
-		 instancias.add(dicionario.getPosicao(metodo), valor);
+		 Integer posicao = dicionario.getPosicao(metodo);
+		instancias.add(posicao, valor);
 	}
 	
-	private Vector<Long> getInstancia(String metodo){
-		Vector<Long> instancias = dataSet.get(metodo);
-		if(instancias==null){
-			instancias = new Vector<Long>(20);
-			initVector(instancias);
-			dataSet.put(metodo, instancias );
-			return dataSet.get(metodo);
-		}
-		return instancias;
-		
+	
+	private void initVector(){
+		/*for (int i = 0; i < QUANT_LIMITE_METODOS; i++) {
+			instancias.add(0L);
+		}*/
 	}
 	
-	private void initVector(Vector<Long> instancias){
-		for (int i = 0; i < instancias.capacity(); i++) {
-			instancias.addElement(0L);
-		}
-	}
-	
-	private void incluirCondicoesAmbientes(String metodoOrigem, Vector<Long> instancias){
+	private void incluirCondicoesAmbientes(String metodoOrigem){
 		receberEstimuloAmbiente(metodoOrigem, "AvailableProcessors", EstatisticaAmbiente.getAvailableProcessors()+0L);
 		receberEstimuloAmbiente(metodoOrigem, "ElapsedTime", EstatisticaAmbiente.getElapsedTime()+0L);
 		receberEstimuloAmbiente(metodoOrigem, "SystemLoadAverage", Long.parseLong(String.format("%.0f",EstatisticaAmbiente.getSystemLoadAverage())));
 	}
 	
 	public void imprimeInstancias(){
-		for (Map.Entry<String, Vector<Long>> entry : dataSet.entrySet())
-		{
-		    System.out.println(entry.getKey() + "/" + entry.getValue());
-		}
+		instancias.imprimir();
 	}
 	
 }	

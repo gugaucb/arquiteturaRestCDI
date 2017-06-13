@@ -9,7 +9,6 @@ import junit.framework.TestCase;
  * @author wallace
  *
  */
-@Test
 public class GerenciadorTokenTest extends TestCase {
 
 	/* (non-Javadoc)
