@@ -12,11 +12,14 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-//@Mapped(namespaceMap = @XmlNsMap(jsonName = "atom", namespace = "http://www.w3.org/2005/Atom"))
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
 @Entity
-public class Funcionario extends BaseEntity {
+public class Funcionario extends BaseEntity<Serializable> implements Serializable  {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3477095598618294634L;
 	@XmlElement
 	@Id
 	@NotNull
@@ -58,8 +61,7 @@ public class Funcionario extends BaseEntity {
 
 	@Override
 	public Serializable getId() {
-		// TODO Auto-generated method stub
-		return null;
+		return matricula;
 	}
 
 	@Override

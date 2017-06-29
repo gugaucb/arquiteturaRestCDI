@@ -17,7 +17,9 @@ import javax.persistence.criteria.Root;
 import javax.transaction.Transactional;
 import javax.ws.rs.NotFoundException;
 
+import me.pocArquitetura.annotations.Monitoring;
 import me.pocArquitetura.entidades.BaseEntity;
+import me.pocArquitetura.util.SimuladorExecucao;
 
 /**
  * A generic dao implementation based solely on JPA.
@@ -43,6 +45,7 @@ public class GenericDaoJpa <T> {
 	public enum MatchMode { START, END, EXACT, ANYWHERE }
 	//public enum Order {DESC, ASC}
 
+	private SimuladorExecucao simuladorExecucao = SimuladorExecucao.getInstance();
 	
 	@Inject
 	private EntityManager entityManager;
@@ -56,11 +59,11 @@ public class GenericDaoJpa <T> {
 	 */
 	@Transactional
 	public <T extends BaseEntity<?>>  T save(T entity) {
+		simuladorExecucao.block();
 		entityManager.persist(entity);
 		return entity;
 	}
-
-
+	
 	/**
 	 * Marges objects with the same identifier within a session into a newly
 	 * created object.
@@ -70,6 +73,7 @@ public class GenericDaoJpa <T> {
 	 */
 	@Transactional
 	public <T extends BaseEntity<PK>, PK extends Serializable> T merge(T entity) {
+		simuladorExecucao.block();
 		return entityManager.merge(entity);
 	}
 
@@ -82,6 +86,7 @@ public class GenericDaoJpa <T> {
 	 */
 	@Transactional
 	public <T extends BaseEntity<PK>, PK extends Serializable> void delete(Class<T> clazz, PK id) {
+		simuladorExecucao.block();
 		T entity = find(clazz, id);
 		if (entity != null) {
 			entityManager.remove(entity);
@@ -98,7 +103,9 @@ public class GenericDaoJpa <T> {
 	 * @return
 	 */
 	@Transactional
+	@Monitoring
 	public <T extends BaseEntity<?>> T find(Class<T> clazz, Serializable id) {
+		simuladorExecucao.block();
 		return entityManager.find(clazz, id);
 	}
 
@@ -112,6 +119,7 @@ public class GenericDaoJpa <T> {
 	 * @return
 	 */
 	public <T extends BaseEntity<?>> List<T> findByProperty(Class<T> clazz, String propertyName, Object value) {
+		simuladorExecucao.block();
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<T> cq = cb.createQuery(clazz);
 		Root<T> root = cq.from(clazz);
@@ -130,6 +138,7 @@ public class GenericDaoJpa <T> {
 	 * @return
 	 */
 	public <T extends BaseEntity<?>> List<T> findByProperty(Class<T> clazz, String propertyName, String value, MatchMode matchMode) {
+		simuladorExecucao.block();
 		//convert the value String to lowercase
 		value = value.toLowerCase();
 		if (MatchMode.START.equals(matchMode)) {
@@ -154,6 +163,7 @@ public class GenericDaoJpa <T> {
 	 * @return
 	 */
 	public <T extends BaseEntity<?>> List<T> findAll(Class<T> clazz) {
+		simuladorExecucao.block();
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<T> cq = cb.createQuery(clazz);
 		cq.from(clazz);
@@ -170,6 +180,7 @@ public class GenericDaoJpa <T> {
 	 * @return
 	 */
 	public <T extends BaseEntity<?>> List<T> findAll(Class<T> clazz, Order order, String... propertiesOrder) {
+		simuladorExecucao.block();
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<T> cq = cb.createQuery(clazz);
 		Root<T> root = cq.from(clazz);

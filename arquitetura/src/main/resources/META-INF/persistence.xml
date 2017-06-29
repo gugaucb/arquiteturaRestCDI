@@ -7,6 +7,9 @@
 		<description>Forge Persistence Unit</description>
 		<jta-data-source>java:jboss/datasources/ExampleDS</jta-data-source>
 		<class>me.pocArquitetura.entidades.Funcionario</class>
+		<class>me.pocArquitetura.entidades.Instancias</class>
+		<class>me.pocArquitetura.entidades.Instancia</class>
+		<class>me.pocArquitetura.entidades.Dicionario</class>
 		
 		<properties>
 			<property name="packagesToScan" value="me.pocArquitetura.entidades"/>

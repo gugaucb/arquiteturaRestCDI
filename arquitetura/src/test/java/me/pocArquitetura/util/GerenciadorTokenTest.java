@@ -9,14 +9,8 @@ import junit.framework.TestCase;
  * @author wallace
  *
  */
-public class GerenciadorTokenTest extends TestCase {
+public class GerenciadorTokenTest {
 
-	/* (non-Javadoc)
-	 * @see junit.framework.TestCase#setUp()
-	 */
-	protected void setUp() throws Exception {
-		super.setUp();
-	}
 
 	/**
 	 * Test method for {@link me.pocArquitetura.util.GerenciadorToken#novaInstancia()}.

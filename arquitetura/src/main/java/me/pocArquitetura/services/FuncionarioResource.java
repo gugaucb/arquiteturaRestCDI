@@ -7,7 +7,6 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Resource;
 import javax.ejb.Asynchronous;
 import javax.enterprise.concurrent.ManagedExecutorService;
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -38,7 +37,7 @@ import me.pocArquitetura.negocio.ProcessoAsyncBean;
 import me.pocArquitetura.util.DateUtil;
 import me.pocArquitetura.util.RestUtil;
 
-@Path("/")
+@Path("/funcionarios")
 @Consumes({ "application/json" })
 @Produces({ "application/json" })
 public class FuncionarioResource {
@@ -49,16 +48,18 @@ public class FuncionarioResource {
 	ManagedExecutorService managedExecutorService;
 
 	@POST
-	@Path("funcionarios")
+	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
+	@Monitoring
 	public Response salvar(Funcionario funcionario, @Context UriInfo uriInfo) {
 		Funcionario funcionarioCadastrado = funcionarioBean.admitir(funcionario);
 		return Response.status(200).entity(funcionarioCadastrado).build();
 	}
 
 	@PUT
-	@Path("funcionarios")
+	@Path("/")
 	@Consumes(MediaType.APPLICATION_JSON)
+	@Monitoring
 	public Response atualizar(Funcionario funcionario) {
 		Funcionario funcionarioAlterado = funcionarioBean.alterarDadosCadastrais(funcionario);
 		return Response.status(200).entity(funcionarioAlterado).build();
@@ -73,7 +74,7 @@ public class FuncionarioResource {
 	 * @return
 	 */
 	@PUT
-	@Path("cache/funcionarios")
+	@Path("cache")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response atualizarComCache(Funcionario funcionario, @Context Request request) {
 		ResponseBuilder builder = IsObjetoIgualAoExistente(funcionario, request);
@@ -101,7 +102,7 @@ public class FuncionarioResource {
 	}
 
 	@GET
-	@Path("funcionario/{matricula}")
+	@Path("/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Monitoring
 	public Funcionario getFuncionario(
@@ -118,8 +119,9 @@ public class FuncionarioResource {
 	 * @return
 	 */
 	@GET
-	@Path("cache/funcionario/{matricula}")
+	@Path("cache/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
+	@Monitoring
 	public Response getFuncionarioCache(
 			@NotNull @Size(min = 5, max = 11, message = "A matricula deve ter entre 5 a 11 caracteres.") @PathParam("matricula") String matricula,
 			@Context Request request) {
@@ -145,7 +147,7 @@ public class FuncionarioResource {
 	 * @param asyncResponse
 	 */
 	@GET
-	@Path("async/funcionario/{matricula}")
+	@Path("async/{matricula}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Asynchronous
 	public void getFuncionarioAsyncro(

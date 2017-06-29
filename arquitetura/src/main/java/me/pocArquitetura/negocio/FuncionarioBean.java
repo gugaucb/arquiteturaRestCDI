@@ -4,6 +4,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import me.pocArquitetura.annotations.Monitoring;
 import me.pocArquitetura.dao.FuncionarioDAO;
 import me.pocArquitetura.entidades.Funcionario;
 import me.pocArquitetura.negocio.exceptions.DadoExistenteException;
@@ -29,14 +30,15 @@ public class FuncionarioBean implements Bean {
 	
 	public Funcionario alterarDadosCadastrais(Funcionario funcionario){
 		if (funcionarioDAO.find(Funcionario.class, funcionario.getId()) != null) {
-			Funcionario funcionarioAtualizado = funcionarioDAO.merge(funcionario);
+			Funcionario merge = funcionarioDAO.merge(funcionario);
+			Funcionario funcionarioAtualizado = merge;
 			return funcionarioAtualizado;
 		}else{
 			throw new EntidadeNaoEncontradaException(funcionario);
 		}
 		
 	}
-	
+	@Monitoring
 	public Funcionario recuperarFuncionarioPorMatricula(Funcionario funcionario){
 		Funcionario funcionarioLocalizado = funcionarioDAO.find(Funcionario.class, funcionario.getMatricula());
 		if(funcionarioLocalizado!=null){

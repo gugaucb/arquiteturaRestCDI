@@ -1,7 +1,7 @@
-package me.pocArquitetura.util;
+package me.pocArquitetura.negocio.exceptions;
 
 /**
- * Classe a ser usada na invalidação do token
+ * Classe a ser usada na invalidao do token
  * @author wallace
  *
  */

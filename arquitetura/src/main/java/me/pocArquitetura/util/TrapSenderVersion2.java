@@ -67,7 +67,7 @@ public class TrapSenderVersion2 {
 					pdu.add(new VariableBinding(SnmpConstants.snmpTrapOID, new OID(Oid)));
 					pdu.add(new VariableBinding(SnmpConstants.snmpTrapAddress, new IpAddress(ipAddress)));
 
-					pdu.add(new VariableBinding(new OID(Oid), new OctetString(throwable.toString()+"-"+metodo)));
+					pdu.add(new VariableBinding(new OID(Oid), new OctetString(throwable.getClass().getName()+"-"+metodo)));
 					pdu.setType(PDU.NOTIFICATION);
 
 					// Send the PDU

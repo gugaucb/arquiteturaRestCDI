@@ -14,6 +14,7 @@ import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import me.pocArquitetura.constantes.Constantes;
+import me.pocArquitetura.negocio.exceptions.TokenInvalidoException;
 
 /**
  * Classe de gerenciamento de tokens: gera��o, valida��o e recupera��o de dados

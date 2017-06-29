@@ -1,6 +1,6 @@
 package me.pocArquitetura.entidades;
 
-import javax.ejb.Singleton;
+import javax.inject.Singleton;
 
 
 @Singleton
