@@ -7,10 +7,13 @@
 		<description>Forge Persistence Unit</description>
 		<jta-data-source>java:jboss/datasources/ExampleDS</jta-data-source>
 		<class>me.pocArquitetura.entidades.Funcionario</class>
-		<class>me.pocArquitetura.entidades.Instancias</class>
-		<class>me.pocArquitetura.entidades.Instancia</class>
-		<class>me.pocArquitetura.entidades.Dicionario</class>
-		
+		<class>me.costa.gustavo.saad4jee.entity.Instancias</class>
+		<class>me.costa.gustavo.saad4jee.entity.Instancia</class>
+		<class>me.costa.gustavo.saad4jee.entity.Dicionario</class>
+		<class>me.costa.gustavo.saad4jee.entity.RobotDetectDicionario</class>
+		<class>me.costa.gustavo.saad4jee.entity.RobotDetectInstancia</class>
+		<class>me.costa.gustavo.saad4jee.entity.RobotDetectInstancias</class>	
+			
 		<properties>
 			<property name="packagesToScan" value="me.pocArquitetura.entidades"/>
 			 <property name="jboss.as.jpa.managed" value="true" />

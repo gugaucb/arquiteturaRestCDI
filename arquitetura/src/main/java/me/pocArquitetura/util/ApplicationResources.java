@@ -13,7 +13,7 @@ import javax.persistence.PersistenceUnit;
 @ApplicationScoped
 public class ApplicationResources {
 	
-	@PersistenceUnit
+	@PersistenceUnit(unitName="forge-default")
 	private EntityManagerFactory factory;
 	
 	@Produces @RequestScoped

@@ -17,7 +17,7 @@ import javax.persistence.criteria.Root;
 import javax.transaction.Transactional;
 import javax.ws.rs.NotFoundException;
 
-import me.pocArquitetura.annotations.Monitoring;
+import me.costa.gustavo.saad4jee.annotations.Monitoring;
 import me.pocArquitetura.entidades.BaseEntity;
 import me.pocArquitetura.util.SimuladorExecucao;
 

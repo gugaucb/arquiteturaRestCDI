@@ -30,7 +30,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import me.pocArquitetura.annotations.Monitoring;
+import me.costa.gustavo.saad4jee.annotations.Monitoring;
 import me.pocArquitetura.entidades.Funcionario;
 import me.pocArquitetura.negocio.FuncionarioBean;
 import me.pocArquitetura.negocio.ProcessoAsyncBean;
@@ -52,6 +52,7 @@ public class FuncionarioResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Monitoring
 	public Response salvar(Funcionario funcionario, @Context UriInfo uriInfo) {
+		System.out.println("salvando");
 		Funcionario funcionarioCadastrado = funcionarioBean.admitir(funcionario);
 		return Response.status(200).entity(funcionarioCadastrado).build();
 	}
